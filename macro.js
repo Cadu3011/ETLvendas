@@ -4,7 +4,6 @@ const path = require('path');
 const pdfParse = require('pdf-parse');
 const mysql = require('mysql2/promise');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-
 async function loginAndGetReport() {
      const connection = await mysql.createConnection({
             host: 'localhost',
@@ -34,7 +33,6 @@ async function loginAndGetReport() {
     context.on('response', async (response) => {
         const contentType = response.headers()['content-type'] || '';
         if (contentType.includes('application/pdf')) {
-            console.log('PDF detectado via interceptação:', response.url());
             pdfResponse = response;
         }
     });
@@ -88,7 +86,6 @@ async function loginAndGetReport() {
         
         });
 
-            console.log('✅ PDF salvo com sucesso como relatorio.pdf');
         } else {
             console.error('❌ Nenhum PDF foi detectado.');
         }
@@ -140,7 +137,6 @@ async function loginAndGetReport() {
         
         });
 
-            console.log('✅ PDF salvo com sucesso como relatorio.pdf');
         } else {
             console.error('❌ Nenhum PDF foi detectado.');
         }
@@ -186,7 +182,6 @@ async function loginAndGetReport() {
         
         });
 
-            console.log('✅ PDF salvo com sucesso como relatorio.pdf');
         } else {
             console.error('❌ Nenhum PDF foi detectado.');
         }
@@ -238,7 +233,6 @@ async function loginAndGetReport() {
         
         });
 
-            console.log('✅ PDF salvo com sucesso como relatorio.pdf');
         } else {
             console.error('❌ Nenhum PDF foi detectado.');
         }
@@ -285,7 +279,6 @@ async function loginAndGetReport() {
         
         });
 
-            console.log('✅ PDF salvo com sucesso como relatorio.pdf');
         } else {
             console.error('❌ Nenhum PDF foi detectado.');
         }
@@ -374,7 +367,7 @@ const filialNome = matchFilial ? matchFilial[1] : rawFilial;
         if (currentFilial && nomeVendedor && valorMedia) {
           currentFilial.Info.push({
             Vendedor: nomeVendedor.slice(0, 11),
-            ValorVendas: valorMedia
+            ValorVendas: parseFloat(valorMedia)
           });
         }
       }
@@ -430,13 +423,23 @@ const filialNome = matchFilial ? matchFilial[1] : rawFilial;
 
   return result;
 }
+function stringToFixedFloat(str, decimalPlaces = 2) {
+  const parts = str.split('.');
+  
+  if (parts.length === 1) return Number(parts[0]); // número inteiro
+
+  const integerPart = parts[0];
+  const decimalPart = parts[1].slice(0, decimalPlaces); // corta sem arredondar
+  
+  const resultStr = `${integerPart}.${decimalPart}`;
+  return Number(resultStr);
+}
 function formatarValorVendas(dados) {
   const dadosFormatados = dados.filiais.map(filial => {
     const filialFormatada = filial.Filial.split(' ').slice(0, 2).join(" ")
     const infoFormatada = filial.Info.map(item => {
       // Converte o valor para número e arredonda para 2 casas decimais
-      const valorFormatado = parseFloat(item.ValorVendas.replace(',', '.')).toFixed(2);
-      
+      const valorFormatado = stringToFixedFloat(item.ValorVendas.replace(',', '.')).toFixed(2);
       return {
         Vendedor: item.Vendedor.slice(0, 11),
         ValorVendas: valorFormatado
@@ -462,9 +465,9 @@ function formatarValorVendas(dados) {
     
         const lastDate = new Date(await getLastDate())
         // const lastDate = new Date(Date.UTC(
-        //   2025,
-        //   2,
-        //   25,
+        //   2024,
+        //   11,
+        //   31,
         //   3, 0, 0, 0
         // ))
         console.log(lastDate)
@@ -474,8 +477,8 @@ function formatarValorVendas(dados) {
    const dataAtual = new Date()
   //  const dataAtualFormat = new Date(Date.UTC(
   //       dataAtual.getUTCFullYear(),
-  //       3,
   //       2,
+  //       26,
   //       3, 0, 0, 0 // hora, minuto, segundo, milissegundo
   //     ));
     const dataAtualFormat = new Date(Date.UTC(
@@ -524,7 +527,7 @@ function formatarValorVendas(dados) {
                     ticketMedio : null,
                     });
                 }
-                vendasMap.get(chave)[campo] = parseFloat(info.ValorVendas.replace(',', '.'));
+                vendasMap.get(chave)[campo] = info.ValorVendas;
                 }
             }
         }
